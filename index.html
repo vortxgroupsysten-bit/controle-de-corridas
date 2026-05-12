@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>FinanceFlow Cloud - Controle Financeiro</title>
+    <title>FinanceFlow - Controle Financeiro</title>
     <style>
         * {
             margin: 0;
@@ -22,13 +22,11 @@
         .container {
             max-width: 500px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(2px);
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 48px 32px 48px 32px;
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             padding: 20px 18px 30px;
-            transition: all 0.2s ease;
         }
 
         .header {
@@ -42,7 +40,6 @@
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.3px;
         }
         .header p {
             font-size: 0.8rem;
@@ -50,14 +47,21 @@
             margin-top: 4px;
         }
 
-        .status-cloud {
-            display: inline-block;
-            background: #10b981;
-            color: white;
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-size: 0.7rem;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            margin-top: 6px;
+            margin-top: 8px;
+            background: #f0f2f5;
+        }
+        .status-online {
+            color: #10b981;
+        }
+        .status-offline {
+            color: #f59e0b;
         }
 
         .balance-card {
@@ -68,6 +72,7 @@
             box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.3);
             color: white;
             text-align: center;
+            transition: all 0.3s ease;
         }
         .balance-label {
             font-size: 0.9rem;
@@ -80,9 +85,7 @@
             font-size: 2.9rem;
             font-weight: 800;
             margin-top: 8px;
-            word-break: break-word;
             font-family: 'SF Mono', 'Courier New', monospace;
-            letter-spacing: 1px;
         }
         .currency {
             font-size: 1.4rem;
@@ -101,9 +104,6 @@
             margin-bottom: 14px;
             font-size: 1.2rem;
             color: #1f3b4c;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             border-left: 5px solid #2c7a4d;
             padding-left: 12px;
         }
@@ -117,20 +117,19 @@
             margin-bottom: 6px;
             color: #2c3e4e;
         }
-        input, select {
+        input {
             width: 100%;
             padding: 14px 16px;
             font-size: 1rem;
-            border: 1.5px solid #e2e8f0;
+            border: 2px solid #e2e8f0;
             border-radius: 44px;
-            background: #fefefe;
             transition: 0.2s;
             font-family: inherit;
         }
-        input:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
         .double-btn {
             display: flex;
@@ -139,7 +138,6 @@
         }
         button {
             flex: 1;
-            background: #2c3e50;
             border: none;
             padding: 14px 0;
             font-weight: 600;
@@ -149,50 +147,49 @@
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: inherit;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .btn-income {
             background: #1f8a4c;
         }
         .btn-income:hover {
             background: #0f6a3a;
-            transform: scale(0.97);
+            transform: scale(0.98);
         }
         .btn-expense {
             background: #c2412c;
         }
         .btn-expense:hover {
             background: #9b2f1c;
-            transform: scale(0.97);
+            transform: scale(0.98);
         }
         button:active {
             transform: scale(0.96);
         }
 
-        .history-title {
+        .history-header {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
+            align-items: center;
             margin: 10px 0 12px 0;
-            padding: 0 4px;
         }
-        .history-title h3 {
+        .history-header h3 {
             font-size: 1.25rem;
             color: #1f2e3a;
         }
-        .clear-btn {
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .secondary-btn {
             background: #6c757d;
-            padding: 6px 14px;
+            padding: 6px 12px;
             font-size: 0.7rem;
             border-radius: 40px;
-            box-shadow: none;
-            font-weight: 500;
         }
         .transaction-list {
             list-style: none;
-            max-height: 340px;
+            max-height: 350px;
             overflow-y: auto;
-            padding-right: 4px;
         }
         .transaction-item {
             background: white;
@@ -203,8 +200,8 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-            transition: 0.1s;
             border-left: 8px solid;
+            transition: transform 0.1s;
         }
         .transaction-income {
             border-left-color: #1f8a4c;
@@ -216,12 +213,13 @@
             font-weight: 500;
             font-size: 0.95rem;
             word-break: break-word;
-            max-width: 55%;
+            flex: 1;
         }
         .trans-value {
             font-weight: 700;
             font-family: monospace;
             font-size: 1rem;
+            margin-right: 12px;
         }
         .income-value {
             color: #1f8a4c;
@@ -229,25 +227,22 @@
         .expense-value {
             color: #c2412c;
         }
-        .delete-trans {
+        .delete-btn {
             background: transparent;
-            box-shadow: none;
+            color: #8f9bb3;
             padding: 6px 10px;
             font-size: 1.1rem;
-            color: #8f9bb3;
-            flex: 0 0 auto;
             width: auto;
-            margin-left: 8px;
+            flex: 0;
         }
-        .delete-trans:hover {
+        .delete-btn:hover {
             color: #e53e3e;
             background: #ffeeee;
-            transform: scale(1.02);
         }
         .empty-msg {
             text-align: center;
             color: #7f8c8d;
-            padding: 30px 10px;
+            padding: 40px 20px;
             background: #f8fafc;
             border-radius: 48px;
             font-size: 0.85rem;
@@ -257,6 +252,14 @@
             padding: 20px;
             color: #3b82f6;
         }
+        .setup-guide {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
         footer {
             text-align: center;
             margin-top: 20px;
@@ -265,13 +268,10 @@
         }
         @media (max-width: 450px) {
             body {
-                padding: 12px 12px 30px;
+                padding: 12px;
             }
             .balance-value {
                 font-size: 2.2rem;
-            }
-            .container {
-                padding: 16px;
             }
         }
     </style>
@@ -279,12 +279,14 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>☁️ FinanceFlow Cloud</h1>
-        <p>Sincronizado com a nuvem | Firebase</p>
-        <div class="status-cloud" id="statusCloud">🟢 Online</div>
+        <h1>💰 FinanceFlow</h1>
+        <p>Controle de entradas e saídas</p>
+        <div class="status-badge">
+            <span id="statusIcon">🔄</span> <span id="statusText">Inicializando...</span>
+        </div>
     </div>
 
-    <div class="balance-card">
+    <div class="balance-card" id="balanceCard">
         <div class="balance-label">SALDO ATUAL</div>
         <div class="balance-value">
             <span class="currency">R$</span> <span id="saldoDisplay">0,00</span>
@@ -295,53 +297,64 @@
         <div class="form-title">📝 Nova movimentação</div>
         <div class="input-group">
             <label>📌 Descrição</label>
-            <input type="text" id="descricaoInput" placeholder="Ex: Freelance, Almoço, Uber..." autocomplete="off">
+            <input type="text" id="descricaoInput" placeholder="Ex: Salário, Almoço, Uber..." autocomplete="off">
         </div>
         <div class="input-group">
             <label>💰 Valor (R$)</label>
             <input type="number" id="valorInput" placeholder="0,00" step="0.01" min="0.01">
         </div>
         <div class="double-btn">
-            <button id="btnRenda" class="btn-income">➕ Renda (Entrada)</button>
-            <button id="btnDespesa" class="btn-expense">➖ Despesa (Saída)</button>
+            <button id="btnRenda" class="btn-income">➕ Adicionar Renda</button>
+            <button id="btnDespesa" class="btn-expense">➖ Adicionar Despesa</button>
         </div>
     </div>
 
-    <div class="history-title">
+    <div class="history-header">
         <h3>📋 Histórico</h3>
-        <button id="btnLimparTudo" class="clear-btn">🗑️ Limpar tudo</button>
+        <div class="action-buttons">
+            <button id="btnLimpar" class="secondary-btn">🗑️ Limpar tudo</button>
+        </div>
     </div>
     <ul id="listaTransacoes" class="transaction-list">
-        <li class="loading">🔄 Carregando dados da nuvem...</li>
+        <li class="loading">🔄 Carregando transações...</li>
     </ul>
-    <footer>✅ Dados salvos automaticamente no Firestore</footer>
+    <div id="setupGuide" class="setup-guide" style="display: none;">
+        ⚠️ <strong>Firestore não configurado!</strong><br>
+        Para ativar o banco de dados na nuvem:<br>
+        1. Acesse: <a href="https://console.cloud.google.com/firestore?project=corridas-52e75" target="_blank">console.cloud.google.com/firestore</a><br>
+        2. Clique em "CREATE DATABASE"<br>
+        3. Escolha "Native Mode" e uma região<br>
+        4. Pronto! Os dados serão sincronizados automaticamente.
+    </div>
+    <footer>✅ Dados salvos em tempo real na nuvem</footer>
 </div>
 
-<!-- Firebase SDKs -->
 <script type="module">
-    // Import Firebase SDKs
+    // Importações do Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-    // Firebase configuration
+    // Configuração do Firebase (SEU NOVO PROJETO)
     const firebaseConfig = {
-        apiKey: "AIzaSyDS8OiWvlYGWeOiNF0ISrA_zzjMvjamRvw",
-        authDomain: "controle-corridas.firebaseapp.com",
-        projectId: "controle-corridas",
-        storageBucket: "controle-corridas.firebasestorage.app",
-        messagingSenderId: "404619431197",
-        appId: "1:404619431197:web:214eb795572bff107225f4",
-        measurementId: "G-YDB5LTR5GL"
+        apiKey: "AIzaSyBddIcMy1x_ay-ZdMI-Gz9qgEga6zOqWT0",
+        authDomain: "corridas-52e75.firebaseapp.com",
+        projectId: "corridas-52e75",
+        storageBucket: "corridas-52e75.firebasestorage.app",
+        messagingSenderId: "265960801139",
+        appId: "1:265960801139:web:b72816022e7a87a0f0fb06",
+        measurementId: "G-HLEWF5HEP7"
     };
 
-    // Initialize Firebase
+    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
 
-    // Coleção no Firestore
-    const TRANSACTIONS_COLLECTION = 'transacoes';
+    // Habilitar persistência offline
+    enableIndexedDbPersistence(db).catch((err) => {
+        console.warn("Persistência offline não disponível:", err);
+    });
 
     // Elementos DOM
     const saldoSpan = document.getElementById('saldoDisplay');
@@ -350,57 +363,58 @@
     const valorInput = document.getElementById('valorInput');
     const btnRenda = document.getElementById('btnRenda');
     const btnDespesa = document.getElementById('btnDespesa');
-    const btnLimparTudo = document.getElementById('btnLimparTudo');
-    const statusCloud = document.getElementById('statusCloud');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusText = document.getElementById('statusText');
+    const balanceCard = document.getElementById('balanceCard');
+    const setupGuide = document.getElementById('setupGuide');
 
-    // Array local para cache
     let transacoes = [];
+    let isFirestoreReady = false;
 
-    // Formatar valor
+    // Formatar moeda
     function formatarMoeda(valor) {
         return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // Calcular saldo
+    // Calcular saldo total
     function calcularSaldo() {
-        let saldoTotal = 0;
-        for (let trans of transacoes) {
-            if (trans.tipo === 'income') {
-                saldoTotal += trans.valor;
-            } else if (trans.tipo === 'expense') {
-                saldoTotal -= trans.valor;
-            }
-        }
-        return saldoTotal;
+        return transacoes.reduce((total, trans) => {
+            return trans.tipo === 'income' ? total + trans.valor : total - trans.valor;
+        }, 0);
     }
 
-    // Atualizar UI do saldo
+    // Atualizar interface do saldo
     function atualizarSaldoUI() {
         const saldo = calcularSaldo();
         saldoSpan.innerText = formatarMoeda(saldo);
-        const balCard = document.querySelector('.balance-card');
+        
+        // Mudar cor do card baseado no saldo
         if (saldo < 0) {
-            balCard.style.background = "linear-gradient(125deg, #632c2c, #3e1a1a)";
+            balanceCard.style.background = "linear-gradient(125deg, #7f1a1a 0%, #4a0e0e 100%)";
+        } else if (saldo === 0) {
+            balanceCard.style.background = "linear-gradient(125deg, #2d3748 0%, #1a202c 100%)";
         } else {
-            balCard.style.background = "linear-gradient(125deg, #1e2b36 0%, #0f1a24 100%)";
+            balanceCard.style.background = "linear-gradient(125deg, #1e2b36 0%, #0f1a24 100%)";
         }
     }
 
-    // Renderizar lista com dados do Firestore
+    // Renderizar lista de transações
     function renderizarLista() {
         if (!listaEl) return;
         
         if (transacoes.length === 0) {
-            listaEl.innerHTML = '<li class="empty-msg">📭 Nenhuma transação registrada. Adicione renda ou despesa</li>';
+            listaEl.innerHTML = '<li class="empty-msg">📭 Nenhuma transação registrada. Adicione sua primeira movimentação!</li>';
             atualizarSaldoUI();
             return;
         }
         
-        // Ordenar por timestamp decrescente (mais recentes primeiro)
-        const transOrder = [...transacoes].sort((a, b) => b.timestamp - a.timestamp);
+        // Ordenar por timestamp (mais recentes primeiro)
+        const transacoesOrdenadas = [...transacoes].sort((a, b) => b.timestamp - a.timestamp);
         
         listaEl.innerHTML = '';
-        for (let trans of transOrder) {
+        
+        transacoesOrdenadas.forEach(trans => {
             const li = document.createElement('li');
             li.className = `transaction-item ${trans.tipo === 'income' ? 'transaction-income' : 'transaction-expense'}`;
             
@@ -409,95 +423,73 @@
             descSpan.innerText = trans.descricao;
             
             const valorSpan = document.createElement('span');
-            valorSpan.className = 'trans-value';
-            const valorFormatado = formatarMoeda(trans.valor);
-            if (trans.tipo === 'income') {
-                valorSpan.innerHTML = `+ R$ ${valorFormatado}`;
-                valorSpan.classList.add('income-value');
-            } else {
-                valorSpan.innerHTML = `- R$ ${valorFormatado}`;
-                valorSpan.classList.add('expense-value');
-            }
+            valorSpan.className = `trans-value ${trans.tipo === 'income' ? 'income-value' : 'expense-value'}`;
+            const sinal = trans.tipo === 'income' ? '+' : '-';
+            valorSpan.innerText = `${sinal} R$ ${formatarMoeda(trans.valor)}`;
             
-            const delBtn = document.createElement('button');
-            delBtn.innerText = '❌';
-            delBtn.className = 'delete-trans';
-            delBtn.addEventListener('click', async (e) => {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerText = '❌';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                if (confirm('Remover esta transação permanentemente?')) {
+                if (confirm(`Remover "${trans.descricao}" permanentemente?`)) {
                     try {
-                        await deleteDoc(doc(db, TRANSACTIONS_COLLECTION, trans.id));
-                        statusCloud.textContent = '🗑️ Removendo...';
-                        setTimeout(() => {
-                            statusCloud.textContent = '🟢 Sincronizado';
-                        }, 1000);
+                        await deleteDoc(doc(db, 'transacoes', trans.id));
                     } catch (error) {
                         console.error('Erro ao remover:', error);
-                        alert('Erro ao remover transação. Verifique sua conexão.');
-                        statusCloud.textContent = '🔴 Erro';
-                        setTimeout(() => {
-                            statusCloud.textContent = '🟢 Online';
-                        }, 2000);
+                        alert('Erro ao remover transação. Tente novamente.');
                     }
                 }
             });
             
-            const wrapperValorDel = document.createElement('div');
-            wrapperValorDel.style.display = 'flex';
-            wrapperValorDel.style.alignItems = 'center';
-            wrapperValorDel.style.gap = '6px';
-            wrapperValorDel.appendChild(valorSpan);
-            wrapperValorDel.appendChild(delBtn);
-            
             li.appendChild(descSpan);
-            li.appendChild(wrapperValorDel);
+            li.appendChild(valorSpan);
+            li.appendChild(deleteBtn);
             listaEl.appendChild(li);
-        }
+        });
+        
         atualizarSaldoUI();
     }
 
-    // Função para adicionar transação ao Firestore
+    // Adicionar transação
     async function adicionarTransacao(descricao, valor, tipo) {
         // Validações
         if (!descricao || descricao.trim() === '') {
-            alert('Por favor, descreva a movimentação');
+            alert('❌ Por favor, descreva a movimentação');
             return false;
         }
+        
         if (isNaN(valor) || valor <= 0) {
-            alert('Valor inválido. Insira um valor positivo');
+            alert('❌ Por favor, insira um valor válido maior que zero');
             return false;
         }
         
         const valorNum = parseFloat(valor);
+        const descricaoLimpa = descricao.trim();
         
         try {
-            statusCloud.textContent = '📤 Salvando...';
-            const novaTrans = {
-                descricao: descricao.trim(),
+            // Criar objeto da transação
+            const novaTransacao = {
+                descricao: descricaoLimpa,
                 valor: valorNum,
                 tipo: tipo,
                 timestamp: Date.now(),
-                dataHora: new Date().toISOString()
+                data: new Date().toISOString()
             };
             
-            await addDoc(collection(db, TRANSACTIONS_COLLECTION), novaTrans);
+            // Salvar no Firestore
+            await addDoc(collection(db, 'transacoes'), novaTransacao);
             
-            statusCloud.textContent = '✅ Salvo!';
-            setTimeout(() => {
-                statusCloud.textContent = '🟢 Online';
-            }, 1500);
-            
+            // Limpar campos
             descInput.value = '';
             valorInput.value = '';
             descInput.focus();
+            
             return true;
         } catch (error) {
             console.error('Erro ao adicionar:', error);
-            alert('Erro ao salvar no Firestore. Verifique sua conexão com a internet.');
-            statusCloud.textContent = '🔴 Falha';
-            setTimeout(() => {
-                statusCloud.textContent = '🟢 Online';
-            }, 2000);
+            alert('❌ Erro ao salvar. Verifique se o Firestore está ativado.\n\nClique em "OK" para ver como configurar.');
+            setupGuide.style.display = 'block';
             return false;
         }
     }
@@ -509,46 +501,47 @@
             return;
         }
         
-        const confirmacao = confirm('⚠️ ATENÇÃO! Isso apagará TODO o histórico do banco de dados. Essa ação é irreversível. Deseja continuar?');
+        const confirmacao = confirm('⚠️ ATENÇÃO! Isso apagará TODAS as transações permanentemente.\n\nEsta ação não pode ser desfeita. Deseja continuar?');
+        
         if (confirmacao) {
+            const loadingMsg = document.createElement('li');
+            loadingMsg.className = 'loading';
+            loadingMsg.innerText = '🗑️ Removendo todas as transações...';
+            listaEl.innerHTML = '';
+            listaEl.appendChild(loadingMsg);
+            
             try {
-                statusCloud.textContent = '🗑️ Limpando...';
-                // Deletar cada documento individualmente
-                for (let trans of transacoes) {
-                    await deleteDoc(doc(db, TRANSACTIONS_COLLECTION, trans.id));
+                // Deletar todas as transações
+                for (const trans of transacoes) {
+                    await deleteDoc(doc(db, 'transacoes', trans.id));
                 }
-                statusCloud.textContent = '✅ Limpo!';
-                setTimeout(() => {
-                    statusCloud.textContent = '🟢 Online';
-                }, 1500);
+                alert('✅ Todas as transações foram removidas com sucesso!');
             } catch (error) {
                 console.error('Erro ao limpar:', error);
-                alert('Erro ao limpar transações.');
-                statusCloud.textContent = '🔴 Erro';
+                alert('❌ Erro ao limpar as transações. Tente novamente.');
+                renderizarLista();
             }
         }
     }
 
     // Handlers
     function handleAdicionarRenda() {
-        const desc = descInput.value;
         let valorRaw = valorInput.value;
         valorRaw = valorRaw.replace(',', '.');
         const valorNum = parseFloat(valorRaw);
-        adicionarTransacao(desc, valorNum, 'income');
+        adicionarTransacao(descInput.value, valorNum, 'income');
     }
     
     function handleAdicionarDespesa() {
-        const desc = descInput.value;
         let valorRaw = valorInput.value;
         valorRaw = valorRaw.replace(',', '.');
         const valorNum = parseFloat(valorRaw);
-        adicionarTransacao(desc, valorNum, 'expense');
+        adicionarTransacao(descInput.value, valorNum, 'expense');
     }
 
-    // Configurar listener em tempo real do Firestore
+    // Configurar listener em tempo real
     function setupRealtimeListener() {
-        const q = query(collection(db, TRANSACTIONS_COLLECTION), orderBy('timestamp', 'desc'));
+        const q = query(collection(db, 'transacoes'), orderBy('timestamp', 'desc'));
         
         onSnapshot(q, 
             (snapshot) => {
@@ -564,40 +557,49 @@
                     });
                 });
                 renderizarLista();
-                statusCloud.textContent = '🟢 Sincronizado';
+                statusIcon.innerText = '✅';
+                statusText.innerText = 'Sincronizado';
+                setupGuide.style.display = 'none';
+                isFirestoreReady = true;
             },
             (error) => {
                 console.error('Erro no listener:', error);
-                statusCloud.textContent = '🔴 Offline';
-                listaEl.innerHTML = '<li class="empty-msg">⚠️ Erro de conexão com o Firestore. Verifique sua internet e permissões.</li>';
+                if (error.code === 'not-found' || error.message.includes('does not exist')) {
+                    statusIcon.innerText = '⚠️';
+                    statusText.innerText = 'Firestore não configurado';
+                    setupGuide.style.display = 'block';
+                    listaEl.innerHTML = '<li class="empty-msg">🔧 Configure o Firestore para começar a usar o app.<br><br>Clique no link abaixo ou no guia de configuração.</li>';
+                } else {
+                    statusIcon.innerText = '🟡';
+                    statusText.innerText = 'Offline - Tentando reconectar';
+                }
             }
         );
     }
 
-    // Adicionar suporte para tecla Enter
-    function setupEnterKey() {
+    // Suporte para tecla Enter
+    function setupKeyboardShortcuts() {
         const handleEnter = (e) => {
-            if (e.key === 'Enter') {
-                if (descInput.value.trim() !== '' && valorInput.value.trim() !== '') {
-                    handleAdicionarRenda();
-                }
+            if (e.key === 'Enter' && descInput.value.trim() && valorInput.value.trim()) {
+                e.preventDefault();
+                handleAdicionarRenda();
             }
         };
         descInput.addEventListener('keypress', handleEnter);
         valorInput.addEventListener('keypress', handleEnter);
     }
 
-    // Inicialização
+    // Inicializar aplicação
     function init() {
         setupRealtimeListener();
-        setupEnterKey();
+        setupKeyboardShortcuts();
         
         btnRenda.addEventListener('click', handleAdicionarRenda);
         btnDespesa.addEventListener('click', handleAdicionarDespesa);
-        btnLimparTudo.addEventListener('click', limparTodasTransacoes);
+        btnLimpar.addEventListener('click', limparTodasTransacoes);
     }
     
-    // Iniciar aplicação
+    // Iniciar
     init();
 </script>
 </body>
