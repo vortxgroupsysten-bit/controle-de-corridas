@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-    <title>FinanceFlow - Controle Financeiro</title>
+    <title>FinanceFlow - Controle de Corridas</title>
     <style>
         * {
             margin: 0;
@@ -56,12 +56,6 @@
             border-radius: 20px;
             margin-top: 8px;
             background: #f0f2f5;
-        }
-        .status-online {
-            color: #10b981;
-        }
-        .status-offline {
-            color: #f59e0b;
         }
 
         .balance-card {
@@ -117,7 +111,7 @@
             margin-bottom: 6px;
             color: #2c3e4e;
         }
-        input {
+        select, input {
             width: 100%;
             padding: 14px 16px;
             font-size: 1rem;
@@ -125,8 +119,16 @@
             border-radius: 44px;
             transition: 0.2s;
             font-family: inherit;
+            background: white;
         }
-        input:focus {
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+        }
+        input:focus, select:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
@@ -165,7 +167,10 @@
         button:active {
             transform: scale(0.96);
         }
-
+        .custom-text-wrapper {
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
         .history-header {
             display: flex;
             justify-content: space-between;
@@ -279,8 +284,8 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>💰 FinanceFlow</h1>
-        <p>Controle de entradas e saídas</p>
+        <h1>🚖 FinanceFlow</h1>
+        <p>Controle de ganhos e gastos (Uber • 99 • InDrive)</p>
         <div class="status-badge">
             <span id="statusIcon">🔄</span> <span id="statusText">Inicializando...</span>
         </div>
@@ -295,10 +300,24 @@
 
     <div class="form-section">
         <div class="form-title">📝 Nova movimentação</div>
+        
+        <!-- SELEÇÃO DA PLATAFORMA (UBER, 99, INDRIVE OU OUTRO) -->
         <div class="input-group">
-            <label>📌 Descrição</label>
-            <input type="text" id="descricaoInput" placeholder="Ex: Salário, Almoço, Uber..." autocomplete="off">
+            <label>📱 Plataforma / Serviço</label>
+            <select id="plataformaSelect">
+                <option value="Uber">🚕 Uber</option>
+                <option value="99">🟢 99</option>
+                <option value="InDrive">🔶 InDrive</option>
+                <option value="outro">✏️ Outro (digitar)</option>
+            </select>
         </div>
+
+        <!-- CAMPO DE TEXTO PERSONALIZADO PARA "OUTRO" (aparece só quando necessário) -->
+        <div id="campoOutro" style="display: none;" class="input-group">
+            <label>✏️ Digite o serviço ou descrição</label>
+            <input type="text" id="descricaoOutro" placeholder="Ex: Táxi, Lotação, Buser, Viagem particular..." autocomplete="off">
+        </div>
+
         <div class="input-group">
             <label>💰 Valor (R$)</label>
             <input type="number" id="valorInput" placeholder="0,00" step="0.01" min="0.01">
@@ -323,19 +342,19 @@
         Para ativar o banco de dados na nuvem:<br>
         1. Acesse: <a href="https://console.cloud.google.com/firestore?project=corridas-52e75" target="_blank">console.cloud.google.com/firestore</a><br>
         2. Clique em "CREATE DATABASE"<br>
-        3. Escolha "Native Mode" e uma região<br>
+        3. Escolha "Native Mode" e uma região (ex: southamerica-east1)<br>
         4. Pronto! Os dados serão sincronizados automaticamente.
     </div>
     <footer>✅ Dados salvos em tempo real na nuvem</footer>
 </div>
 
 <script type="module">
-    // Importações do Firebase
+    // Importações Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-    // Configuração do Firebase (SEU NOVO PROJETO)
+    // Configuração Firebase (corridas-52e75)
     const firebaseConfig = {
         apiKey: "AIzaSyBddIcMy1x_ay-ZdMI-Gz9qgEga6zOqWT0",
         authDomain: "corridas-52e75.firebaseapp.com",
@@ -346,20 +365,18 @@
         measurementId: "G-HLEWF5HEP7"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getFirestore(app);
+    
+    enableIndexedDbPersistence(db).catch((err) => console.warn("Offline persistence:", err));
 
-    // Habilitar persistência offline
-    enableIndexedDbPersistence(db).catch((err) => {
-        console.warn("Persistência offline não disponível:", err);
-    });
-
-    // Elementos DOM
+    // DOM elements
     const saldoSpan = document.getElementById('saldoDisplay');
     const listaEl = document.getElementById('listaTransacoes');
-    const descInput = document.getElementById('descricaoInput');
+    const plataformaSelect = document.getElementById('plataformaSelect');
+    const campoOutroDiv = document.getElementById('campoOutro');
+    const descricaoOutro = document.getElementById('descricaoOutro');
     const valorInput = document.getElementById('valorInput');
     const btnRenda = document.getElementById('btnRenda');
     const btnDespesa = document.getElementById('btnDespesa');
@@ -370,7 +387,30 @@
     const setupGuide = document.getElementById('setupGuide');
 
     let transacoes = [];
-    let isFirestoreReady = false;
+
+    // Mostra/esconde campo "outro" e garante que fique vazio ao esconder
+    function toggleCampoOutro() {
+        const isOutro = (plataformaSelect.value === 'outro');
+        campoOutroDiv.style.display = isOutro ? 'block' : 'none';
+        if (!isOutro) {
+            descricaoOutro.value = ''; // limpa o texto quando não está em uso
+        }
+    }
+
+    // Obtém a descrição pronta para salvar conforme o que foi selecionado/digitado
+    function obterDescricaoPronta() {
+        if (plataformaSelect.value === 'outro') {
+            let texto = descricaoOutro.value.trim();
+            if (texto === "") return ""; // retorna vazio para validação
+            return texto;
+        } else {
+            const plataforma = plataformaSelect.value;
+            if (plataforma === "Uber") return "🚕 Uber";
+            if (plataforma === "99") return "🟢 99";
+            if (plataforma === "InDrive") return "🔶 InDrive";
+            return plataforma;
+        }
+    }
 
     // Formatar moeda
     function formatarMoeda(valor) {
@@ -384,12 +424,10 @@
         }, 0);
     }
 
-    // Atualizar interface do saldo
+    // Atualizar saldo UI
     function atualizarSaldoUI() {
         const saldo = calcularSaldo();
         saldoSpan.innerText = formatarMoeda(saldo);
-        
-        // Mudar cor do card baseado no saldo
         if (saldo < 0) {
             balanceCard.style.background = "linear-gradient(125deg, #7f1a1a 0%, #4a0e0e 100%)";
         } else if (saldo === 0) {
@@ -402,31 +440,23 @@
     // Renderizar lista de transações
     function renderizarLista() {
         if (!listaEl) return;
-        
         if (transacoes.length === 0) {
-            listaEl.innerHTML = '<li class="empty-msg">📭 Nenhuma transação registrada. Adicione sua primeira movimentação!</li>';
+            listaEl.innerHTML = '<li class="empty-msg">📭 Nenhuma transação registrada. Adicione receita ou despesa de corridas!</li>';
             atualizarSaldoUI();
             return;
         }
-        
-        // Ordenar por timestamp (mais recentes primeiro)
         const transacoesOrdenadas = [...transacoes].sort((a, b) => b.timestamp - a.timestamp);
-        
         listaEl.innerHTML = '';
-        
         transacoesOrdenadas.forEach(trans => {
             const li = document.createElement('li');
             li.className = `transaction-item ${trans.tipo === 'income' ? 'transaction-income' : 'transaction-expense'}`;
-            
             const descSpan = document.createElement('span');
             descSpan.className = 'trans-desc';
             descSpan.innerText = trans.descricao;
-            
             const valorSpan = document.createElement('span');
             valorSpan.className = `trans-value ${trans.tipo === 'income' ? 'income-value' : 'expense-value'}`;
             const sinal = trans.tipo === 'income' ? '+' : '-';
             valorSpan.innerText = `${sinal} R$ ${formatarMoeda(trans.valor)}`;
-            
             const deleteBtn = document.createElement('button');
             deleteBtn.innerText = '❌';
             deleteBtn.className = 'delete-btn';
@@ -437,81 +467,103 @@
                         await deleteDoc(doc(db, 'transacoes', trans.id));
                     } catch (error) {
                         console.error('Erro ao remover:', error);
-                        alert('Erro ao remover transação. Tente novamente.');
+                        alert('Erro ao remover transação.');
                     }
                 }
             });
-            
             li.appendChild(descSpan);
             li.appendChild(valorSpan);
             li.appendChild(deleteBtn);
             listaEl.appendChild(li);
         });
-        
         atualizarSaldoUI();
     }
 
-    // Adicionar transação
+    // Adicionar transação (central)
     async function adicionarTransacao(descricao, valor, tipo) {
-        // Validações
         if (!descricao || descricao.trim() === '') {
-            alert('❌ Por favor, descreva a movimentação');
+            alert('❌ Por favor, defina uma descrição válida.\n\n• Selecione Uber, 99 ou InDrive\n• Ou escolha "Outro" e digite o serviço.');
             return false;
         }
-        
         if (isNaN(valor) || valor <= 0) {
-            alert('❌ Por favor, insira um valor válido maior que zero');
+            alert('❌ Insira um valor válido maior que zero');
             return false;
         }
-        
         const valorNum = parseFloat(valor);
-        const descricaoLimpa = descricao.trim();
-        
+        const descLimpa = descricao.trim();
         try {
-            // Criar objeto da transação
-            const novaTransacao = {
-                descricao: descricaoLimpa,
+            await addDoc(collection(db, 'transacoes'), {
+                descricao: descLimpa,
                 valor: valorNum,
                 tipo: tipo,
                 timestamp: Date.now(),
                 data: new Date().toISOString()
-            };
-            
-            // Salvar no Firestore
-            await addDoc(collection(db, 'transacoes'), novaTransacao);
-            
-            // Limpar campos
-            descInput.value = '';
+            });
+            // Limpar campos após sucesso
             valorInput.value = '';
-            descInput.focus();
-            
+            // Se estiver no modo "outro", limpa o campo de texto, mas mantém o select
+            if (plataformaSelect.value === 'outro') {
+                descricaoOutro.value = '';
+            }
+            valorInput.focus();
             return true;
         } catch (error) {
-            console.error('Erro ao adicionar:', error);
-            alert('❌ Erro ao salvar. Verifique se o Firestore está ativado.\n\nClique em "OK" para ver como configurar.');
+            console.error(error);
+            alert('❌ Erro ao salvar. Verifique se o Firestore está ativado.\nClique em OK para ver o guia.');
             setupGuide.style.display = 'block';
             return false;
         }
     }
 
-    // Limpar todas as transações
+    // Handlers
+    function handleAdicionarRenda() {
+        let valorRaw = valorInput.value;
+        valorRaw = valorRaw.replace(',', '.');
+        const valorNum = parseFloat(valorRaw);
+        const descricao = obterDescricaoPronta();
+        if (!descricao) {
+            if (plataformaSelect.value === 'outro') {
+                alert('✏️ Você selecionou "Outro". Por favor, digite a descrição do serviço no campo abaixo.');
+                descricaoOutro.focus();
+            } else {
+                alert('Selecione uma plataforma válida.');
+            }
+            return;
+        }
+        adicionarTransacao(descricao, valorNum, 'income');
+    }
+
+    function handleAdicionarDespesa() {
+        let valorRaw = valorInput.value;
+        valorRaw = valorRaw.replace(',', '.');
+        const valorNum = parseFloat(valorRaw);
+        const descricao = obterDescricaoPronta();
+        if (!descricao) {
+            if (plataformaSelect.value === 'outro') {
+                alert('✏️ Você selecionou "Outro". Por favor, digite a descrição do serviço no campo abaixo.');
+                descricaoOutro.focus();
+            } else {
+                alert('Selecione uma plataforma válida.');
+            }
+            return;
+        }
+        adicionarTransacao(descricao, valorNum, 'expense');
+    }
+
+    // Limpar todas transações
     async function limparTodasTransacoes() {
         if (transacoes.length === 0) {
             alert('Nenhuma transação para remover.');
             return;
         }
-        
         const confirmacao = confirm('⚠️ ATENÇÃO! Isso apagará TODAS as transações permanentemente.\n\nEsta ação não pode ser desfeita. Deseja continuar?');
-        
         if (confirmacao) {
             const loadingMsg = document.createElement('li');
             loadingMsg.className = 'loading';
             loadingMsg.innerText = '🗑️ Removendo todas as transações...';
             listaEl.innerHTML = '';
             listaEl.appendChild(loadingMsg);
-            
             try {
-                // Deletar todas as transações
                 for (const trans of transacoes) {
                     await deleteDoc(doc(db, 'transacoes', trans.id));
                 }
@@ -524,32 +576,16 @@
         }
     }
 
-    // Handlers
-    function handleAdicionarRenda() {
-        let valorRaw = valorInput.value;
-        valorRaw = valorRaw.replace(',', '.');
-        const valorNum = parseFloat(valorRaw);
-        adicionarTransacao(descInput.value, valorNum, 'income');
-    }
-    
-    function handleAdicionarDespesa() {
-        let valorRaw = valorInput.value;
-        valorRaw = valorRaw.replace(',', '.');
-        const valorNum = parseFloat(valorRaw);
-        adicionarTransacao(descInput.value, valorNum, 'expense');
-    }
-
-    // Configurar listener em tempo real
+    // Listener em tempo real do Firestore
     function setupRealtimeListener() {
         const q = query(collection(db, 'transacoes'), orderBy('timestamp', 'desc'));
-        
-        onSnapshot(q, 
+        onSnapshot(q,
             (snapshot) => {
                 transacoes = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
                     transacoes.push({
-                        id: doc.id,
+                        id: docSnap.id,
                         descricao: data.descricao,
                         valor: data.valor,
                         tipo: data.tipo,
@@ -560,46 +596,72 @@
                 statusIcon.innerText = '✅';
                 statusText.innerText = 'Sincronizado';
                 setupGuide.style.display = 'none';
-                isFirestoreReady = true;
             },
             (error) => {
                 console.error('Erro no listener:', error);
-                if (error.code === 'not-found' || error.message.includes('does not exist')) {
+                if (error.code === 'not-found' || error.message.includes('does not exist') || error.message.includes('permission')) {
                     statusIcon.innerText = '⚠️';
                     statusText.innerText = 'Firestore não configurado';
                     setupGuide.style.display = 'block';
-                    listaEl.innerHTML = '<li class="empty-msg">🔧 Configure o Firestore para começar a usar o app.<br><br>Clique no link abaixo ou no guia de configuração.</li>';
+                    listaEl.innerHTML = '<li class="empty-msg">🔧 Configure o Firestore para começar a usar o app.<br><br>Clique no link de configuração abaixo.</li>';
                 } else {
                     statusIcon.innerText = '🟡';
-                    statusText.innerText = 'Offline - Tentando reconectar';
+                    statusText.innerText = 'Offline - Dados locais';
                 }
             }
         );
     }
 
-    // Suporte para tecla Enter
+    // Tecla Enter para facilitar
     function setupKeyboardShortcuts() {
-        const handleEnter = (e) => {
-            if (e.key === 'Enter' && descInput.value.trim() && valorInput.value.trim()) {
+        const handleEnterNoValor = (e) => {
+            if (e.key === 'Enter') {
                 e.preventDefault();
-                handleAdicionarRenda();
+                // Verifica se a descrição está ok
+                let descOk = obterDescricaoPronta();
+                if (!descOk && plataformaSelect.value === 'outro') {
+                    alert('Digite a descrição no campo "Outro" antes de adicionar.');
+                    descricaoOutro.focus();
+                    return;
+                } else if (!descOk) {
+                    alert('Selecione uma plataforma ou escreva em "Outro".');
+                    return;
+                }
+                const valorAtual = valorInput.value.trim();
+                if (valorAtual === "") {
+                    alert('Digite um valor antes de adicionar.');
+                    return;
+                }
+                handleAdicionarRenda(); // padrão renda ao teclar Enter (pode mudar conforme desejo)
             }
         };
-        descInput.addEventListener('keypress', handleEnter);
-        valorInput.addEventListener('keypress', handleEnter);
+        valorInput.addEventListener('keypress', handleEnterNoValor);
+        
+        // Se estiver no campo "outro", Enter move foco para valor ou adiciona
+        descricaoOutro.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (plataformaSelect.value === 'outro' && descricaoOutro.value.trim() !== "") {
+                    valorInput.focus();
+                } else if (plataformaSelect.value === 'outro' && descricaoOutro.value.trim() === "") {
+                    alert('Digite a descrição antes de continuar.');
+                }
+            }
+        });
     }
 
-    // Inicializar aplicação
+    // Inicializar tudo
     function init() {
         setupRealtimeListener();
         setupKeyboardShortcuts();
-        
         btnRenda.addEventListener('click', handleAdicionarRenda);
         btnDespesa.addEventListener('click', handleAdicionarDespesa);
         btnLimpar.addEventListener('click', limparTodasTransacoes);
+        plataformaSelect.addEventListener('change', () => {
+            toggleCampoOutro();
+        });
+        toggleCampoOutro(); // estado inicial correto
     }
-    
-    // Iniciar
     init();
 </script>
 </body>
